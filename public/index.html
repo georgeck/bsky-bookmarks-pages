@@ -1,31 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="A collection of my saved Bluesky bookmarks">
   <title>George's Bluesky Bookmarks</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css"
-    integrity="sha512-wnea99uKIC3TJF7v4eKk4Y+lMz2Mklv18+r4na2Gn1abDRPPOeef95xTzdwGD9e6zXJBteMIhZ1+68QC5byJZw=="
-    crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <link rel="icon"
-    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" integrity="sha512-wnea99uKIC3TJF7v4eKk4Y+lMz2Mklv18+r4na2Gn1abDRPPOeef95xTzdwGD9e6zXJBteMIhZ1+68QC5byJZw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
   <style>
     .external-link::after {
       content: "↗";
       display: inline-block;
       margin-left: 4px;
     }
-
     .bookmark-card {
       transition: transform 0.2s;
     }
-
     .bookmark-card:hover {
       transform: translateY(-2px);
     }
-
     .loading-spinner {
       border: 3px solid #f3f3f3;
       border-top: 3px solid #3498db;
@@ -34,29 +27,20 @@
       height: 24px;
       animation: spin 1s linear infinite;
     }
-
     @keyframes spin {
-      0% {
-        transform: rotate(0deg);
-      }
-
-      100% {
-        transform: rotate(360deg);
-      }
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
-
     /* Dark mode support */
     @media (prefers-color-scheme: dark) {
       body {
         background-color: #1a1a1a;
         color: #e5e5e5;
       }
-
       .bookmark-card {
         background-color: #2d2d2d;
         border-color: #404040;
       }
-
       .external-link {
         color: #60a5fa;
       }
@@ -65,60 +49,60 @@
 </head>
 
 <body class="bg-gray-100 min-h-screen bg-gray-900">
-  <div class="container mx-auto px-4 py-8">
-    <header class="mb-8">
+<div class="container mx-auto px-4 py-8">
+  <header class="mb-8">
       <h1 class="text-3xl font-bold text-gray-100">My 🦋 Bookmarks</h1>
-    </header>
+  </header>
 
-    <!-- Loading State -->
-    <div id="loading" class="hidden flex justify-center items-center py-8">
-      <div class="loading-spinner"></div>
+  <!-- Loading State -->
+  <div id="loading" class="hidden flex justify-center items-center py-8">
+    <div class="loading-spinner"></div>
       <span class="ml-3 text-gray-400">Loading bookmarks...</span>
-    </div>
+  </div>
 
-    <!-- Error State -->
+  <!-- Error State -->
     <div id="error"
       class="hidden border border-red-400  px-4 py-3 rounded relative mb-6 bg-red-900 text-red-100"
       role="alert">
-      <span class="block sm:inline" id="error-message"></span>
-    </div>
-
-    <!-- Bookmarks Container -->
-    <div id="bookmarks-container" class="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-      <!-- Bookmarks will be inserted here -->
-    </div>
-
-    <!-- Load More Button -->
-    <div id="load-more-container" class="mt-8 text-center">
-      <button id="load-more"
-        class="hidden bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded transition duration-200">
-        Load More
-      </button>
-    </div>
+    <span class="block sm:inline" id="error-message"></span>
   </div>
 
-  <script>
-    const API_URL = 'https://bookmarks.georgeck.workers.dev/bookmarks';
-    let isLoading = false;
+  <!-- Bookmarks Container -->
+  <div id="bookmarks-container" class="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+    <!-- Bookmarks will be inserted here -->
+  </div>
 
-    // Utility function to format timestamps
-    function formatTimestamp(timestamp) {
-      const date = new Date(timestamp);
-      return new Intl.DateTimeFormat('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      }).format(date);
-    }
+  <!-- Load More Button -->
+  <div id="load-more-container" class="mt-8 text-center">
+    <button id="load-more" class="hidden bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded transition duration-200">
+      Load More
+    </button>
+  </div>
+</div>
 
-    // Function to create a bookmark card
-    function createBookmarkCard(bookmark) {
-      const card = document.createElement('div');
+<script>
+  const API_URL = 'https://bookmarks.georgeck.workers.dev/bookmarks';
+  let isLoading = false;
+  let currentCursor = null;
+
+  // Utility function to format timestamps
+  function formatTimestamp(timestamp) {
+    const date = new Date(timestamp);
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
+  }
+
+  // Function to create a bookmark card
+  function createBookmarkCard(bookmark) {
+    const card = document.createElement('div');
       card.className = 'bookmark-card bg-gray-800 rounded-lg shadow-md overflow-hidden';
 
-      const content = `
+    const content = `
                 <div class="p-6">
                     <div class="bookmark-content mb-4">
                         ${bookmark.html}
@@ -126,105 +110,115 @@
                 </div>
             `;
 
-      card.innerHTML = content;
-      return card;
-    }
+    card.innerHTML = content;
+    return card;
+  }
 
-    // Function to handle loading state
-    function setLoading(loading) {
-      isLoading = loading;
-      const loadingElement = document.getElementById('loading');
+  // Function to handle loading state
+  function setLoading(loading) {
+    isLoading = loading;
+    const loadingElement = document.getElementById('loading');
+    const loadMoreButton = document.getElementById('load-more');
+
+    loadingElement.classList.toggle('hidden', !loading);
+    if (loadMoreButton) {
+      loadMoreButton.disabled = loading;
+      loadMoreButton.classList.toggle('opacity-50', loading);
+    }
+  }
+
+  // Function to show error message
+  function showError(message) {
+    const errorElement = document.getElementById('error');
+    const errorMessageElement = document.getElementById('error-message');
+    errorElement.classList.remove('hidden');
+    errorMessageElement.textContent = message;
+  }
+
+  // Function to hide error message
+  function hideError() {
+    const errorElement = document.getElementById('error');
+    errorElement.classList.add('hidden');
+  }
+
+  // Function to fetch and display bookmarks
+  async function fetchBookmarks(cursor = null) {
+    if (isLoading) return;
+
+    setLoading(true);
+    hideError();
+
+    try {
+      const url = cursor
+              ? `${API_URL}?cursor=${encodeURIComponent(cursor)}`
+              : API_URL;
+
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Failed to fetch bookmarks');
+      }
+
+      const data = await response.json();
+      const bookmarksContainer = document.getElementById('bookmarks-container');
       const loadMoreButton = document.getElementById('load-more');
 
-      loadingElement.classList.toggle('hidden', !loading);
-      if (loadMoreButton) {
-        loadMoreButton.disabled = loading;
-        loadMoreButton.classList.toggle('opacity-50', loading);
+      // If this is a fresh load (no cursor), clear the container
+      if (!cursor) {
+        bookmarksContainer.innerHTML = '';
       }
-    }
 
-    // Function to show error message
-    function showError(message) {
-      const errorElement = document.getElementById('error');
-      const errorMessageElement = document.getElementById('error-message');
-      errorElement.classList.remove('hidden');
-      errorMessageElement.textContent = message;
-    }
-
-    // Function to hide error message
-    function hideError() {
-      const errorElement = document.getElementById('error');
-      errorElement.classList.add('hidden');
-    }
-
-    // Function to fetch and display bookmarks
-    async function fetchBookmarks() {
-      if (isLoading) return;
-
-      setLoading(true);
-      hideError();
-
-      try {
-        const response = await fetch(API_URL);
-        if (!response.ok) {
-          throw new Error('Failed to fetch bookmarks');
-        }
-
-        const data = await response.json();
-        const bookmarksContainer = document.getElementById('bookmarks-container');
-        const loadMoreButton = document.getElementById('load-more');
-
-        data.bookmarks.forEach(bookmark => {
-          const card = createBookmarkCard(bookmark);
-          bookmarksContainer.appendChild(card);
-        });
-
-        loadMoreButton.classList.toggle('hidden', !data.has_more);
-
-        // Initialize oEmbed content
-        initializeOembeds();
-
-      } catch (error) {
-        console.error('Error fetching bookmarks:', error);
-        showError('Failed to load bookmarks. Please try again later.');
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    // Function to initialize oEmbed content
-    function initializeOembeds() {
-      const scripts = document.querySelectorAll('.bookmark-content script');
-      scripts.forEach(script => {
-        if (script.src) {
-          const newScript = document.createElement('script');
-          newScript.src = script.src;
-          newScript.async = true;
-          document.body.appendChild(newScript);
-        }
+      data.bookmarks.forEach(bookmark => {
+        const card = createBookmarkCard(bookmark);
+        bookmarksContainer.appendChild(card);
       });
+
+      // Update cursor for next page
+      currentCursor = data.cursor;
+      loadMoreButton.classList.toggle('hidden', !data.has_more);
+
+      // Initialize oEmbed content
+      initializeOembeds();
+
+    } catch (error) {
+      console.error('Error fetching bookmarks:', error);
+      showError('Failed to load bookmarks. Please try again later.');
+    } finally {
+      setLoading(false);
     }
+  }
 
-    // Event Listeners
-    document.addEventListener('DOMContentLoaded', fetchBookmarks);
-
-    document.getElementById('load-more').addEventListener('click', fetchBookmarks);
-
-    // Handle scroll-based loading
-    let scrollTimeout;
-    window.addEventListener('scroll', () => {
-      clearTimeout(scrollTimeout);
-      scrollTimeout = setTimeout(() => {
-        const {scrollTop, scrollHeight, clientHeight} = document.documentElement;
-        if (scrollTop + clientHeight >= scrollHeight - 100) {
-          const loadMoreButton = document.getElementById('load-more');
-          if (!loadMoreButton.classList.contains('hidden')) {
-            fetchBookmarks();
-          }
-        }
-      }, 100);
+  // Function to initialize oEmbed content
+  function initializeOembeds() {
+    const scripts = document.querySelectorAll('.bookmark-content script');
+    scripts.forEach(script => {
+      if (script.src) {
+        const newScript = document.createElement('script');
+        newScript.src = script.src;
+        newScript.async = true;
+        document.body.appendChild(newScript);
+      }
     });
-  </script>
-</body>
+  }
 
+  // Event Listeners
+  document.addEventListener('DOMContentLoaded', fetchBookmarks);
+
+  document.getElementById('load-more').addEventListener('click', () => fetchBookmarks(currentCursor));
+
+  // Handle scroll-based loading
+  let scrollTimeout;
+  window.addEventListener('scroll', () => {
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(() => {
+      const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+      if (scrollTop + clientHeight >= scrollHeight - 100) {
+        const loadMoreButton = document.getElementById('load-more');
+        if (!loadMoreButton.classList.contains('hidden')) {
+          fetchBookmarks(currentCursor);
+        }
+      }
+    }, 100);
+  });
+</script>
+</body>
 </html>
